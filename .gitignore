@@ -1,1 +1,13 @@
+# ignored files
 *.user
+*.sln
+ui_*
+*.vcxproj
+*.filters
+.qmake.stash
+
+# ignored folders
+/debug
+/release
+/.vs
+/.vscode

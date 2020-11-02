@@ -8,6 +8,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     //checking files
     this->initFiles();
+    //init context menu
+    this->initMenu();
 }
 
 MainWindow::~MainWindow()
@@ -32,4 +34,19 @@ void MainWindow::initFiles()
         taskFile.close();
     }
     qDebug() << this->c_configPath;
+}
+
+void MainWindow::initMenu()
+{
+    this->m_rightKeyMenu = new QMenu(this);
+    //context menu policy set to custom
+    setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+    //action call new task edit dialog
+    QAction* actionNewItem = new QAction("new Task");
+    m_rightKeyMenu->addAction(actionNewItem);
+    //context menu follows the cursor
+    QObject::connect(this, &MainWindow::customContextMenuRequested,
+        [=](const QPoint& curPos) {
+            m_rightKeyMenu->exec(mapToGlobal(curPos));
+        });
 }

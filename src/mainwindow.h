@@ -31,6 +31,8 @@ private:
     void writeTasks();
     //check the system folder and file
     void initFiles();
+    //init list view right key menu and actions
+    void initMenu();
 private:
     //software config path in different OS
 #ifdef Q_OS_WIN32//Windows
@@ -45,5 +47,7 @@ private:
     QStandardItemModel* m_model;
     //backup info list
     QList<BackupInfo> m_infoList;
+    //list view right key menu
+    QMenu* m_rightKeyMenu;
 };
 #endif // MAINWINDOW_H

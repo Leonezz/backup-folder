@@ -6,6 +6,7 @@
 #include <QDir>
 
 #include "backupinfo.h"
+#include "createtask.h"
 
 #define DEBUG
 #ifdef DEBUG
@@ -49,5 +50,7 @@ private:
     QList<BackupInfo> m_infoList;
     //list view right key menu
     QMenu* m_rightKeyMenu;
+    //create new task dialog
+    CreateTask* m_newTaskDialog;
 };
 #endif // MAINWINDOW_H

@@ -4,6 +4,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , m_newTaskDialog(new CreateTask(this))
 {
     ui->setupUi(this);
     //checking files
@@ -43,6 +44,11 @@ void MainWindow::initMenu()
     setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     //action call new task edit dialog
     QAction* actionNewItem = new QAction("new Task");
+    //connect the triggered signal of actionNewItem to the createTaskDialog exec
+    QObject::connect(actionNewItem, &QAction::triggered,
+        [=](bool) {
+            m_newTaskDialog->exec();
+        });
     m_rightKeyMenu->addAction(actionNewItem);
     //context menu follows the cursor
     QObject::connect(this, &MainWindow::customContextMenuRequested,

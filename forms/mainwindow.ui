@@ -26,21 +26,63 @@
      <x>0</x>
      <y>0</y>
      <width>876</width>
-     <height>80</height>
+     <height>33</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>Microsoft YaHei UI</family>
+     <pointsize>9</pointsize>
+    </font>
+   </property>
    <widget class="QMenu" name="menuFile">
+    <property name="geometry">
+     <rect>
+      <x>617</x>
+      <y>406</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Microsoft YaHei UI</family>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
     <property name="title">
      <string>文件</string>
     </property>
     <addaction name="actionexit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
+    <property name="geometry">
+     <rect>
+      <x>745</x>
+      <y>406</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
     <property name="title">
      <string>帮助</string>
     </property>
    </widget>
    <widget class="QMenu" name="menuDonate">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Microsoft YaHei UI</family>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
     <property name="title">
      <string>捐赠</string>
     </property>

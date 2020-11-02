@@ -10,13 +10,18 @@ CONFIG += c++11
 
 SOURCES += \
     src/main.cpp \
-    src/mainwindow.cpp
+    src/mainwindow.cpp \
+    src/backupinfo.cpp \
+    src/createtask.cpp
 
 HEADERS += \
-    src/mainwindow.h
+    src/mainwindow.h \
+    src/backupinfo.h \
+    src/createtask.h
 
 FORMS += \
-    forms/mainwindow.ui
+    forms/mainwindow.ui \
+    forms/createtask.ui
 
 TRANSLATIONS += \
     asserts/backupfolder_zh_CN.ts

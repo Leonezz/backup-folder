@@ -24,6 +24,12 @@ void CreateTask::selectDestDir()
 	ui->lineEditDestDir->setText(m_destDirPath);
 }
 
+void CreateTask::setSyncDurationTime()
+{
+	QTime time = ui->timeEditSyncDuration->time();
+	this->m_syncDurationMinutes = time.hour() * 60 + time.minute();
+}
+
 void CreateTask::initConnections()
 {
 	//source
@@ -32,6 +38,9 @@ void CreateTask::initConnections()
 	//destination
 	QObject::connect(ui->pushButtonChooseDestDir, &QPushButton::clicked
 		, this, &CreateTask::selectDestDir);
+	//time
+	QObject::connect(ui->timeEditSyncDuration, &QTimeEdit::editingFinished
+		, this, &CreateTask::setSyncDurationTime);
 }
 
 void CreateTask::selectSourceDir()

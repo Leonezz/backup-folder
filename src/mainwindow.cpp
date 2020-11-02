@@ -43,7 +43,7 @@ void MainWindow::initMenu()
     //context menu policy set to custom
     setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     //action call new task edit dialog
-    QAction* actionNewItem = new QAction("new Task");
+    QAction* actionNewItem = new QAction(tr("new Task"));
     //connect the triggered signal of actionNewItem to the createTaskDialog exec
     QObject::connect(actionNewItem, &QAction::triggered,
         [=](bool) {

@@ -11,7 +11,8 @@ BackupInfo::BackupInfo(const QString& sourceDirPath
 const QString& BackupInfo::toString() const
 {
 	return this->m_sourceDirPath
-		+ "->" + this->m_destDirPath;
+		+ "->" + this->m_destDirPath
+		+ "(" + QString::number(m_syncDurationMinutes) + ")";
 }
 
 const QString& BackupInfo::getSourceDirPath() const

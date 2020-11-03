@@ -41,6 +41,10 @@ void CreateTask::initConnections()
 	//time
 	QObject::connect(ui->timeEditSyncDuration, &QTimeEdit::editingFinished
 		, this, &CreateTask::setSyncDurationTime);
+	//task created,emit task info
+	QObject::connect(ui->buttonBox, &QDialogButtonBox::accepted, [=]() {
+		emit forwardTaskInfo(m_souceDirPath, m_destDirPath, m_syncDurationMinutes);
+		});
 }
 
 void CreateTask::selectSourceDir()

@@ -11,6 +11,11 @@ class CreateTask :
     Q_OBJECT
 public:
     CreateTask(QWidget* parent = nullptr);
+signals:
+    //send task info to mainwindow
+    void forwardTaskInfo(const QString& sourceDir
+        , const QString& destDir
+        , const int syncDurationMinutes);
 public slots:
     void selectSourceDir();
     void selectDestDir();

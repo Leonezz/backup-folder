@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QStandardItemModel>
 #include <QDir>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "backupinfo.h"
 #include "createtask.h"
@@ -25,15 +28,22 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+public slots:
+    void getTaskInfo(const QString& sourceDir
+        , const QString& destDir
+        , const int syncDurationMinutes);
 private:
     //read tasks form global task file
     void readTasks();
-    //write tasks to global task file
+    //write all the tasks to global file
     void writeTasks();
     //check the system folder and file
     void initFiles();
     //init list view right key menu and actions
     void initMenu();
+    //init all the widget connections
+    void initConnections();
 private:
     //software config path in different OS
 #ifdef Q_OS_WIN32//Windows
@@ -46,8 +56,8 @@ private:
     Ui::MainWindow *ui;
     //item model of list view
     QStandardItemModel* m_model;
-    //backup info list
-    QList<BackupInfo> m_infoList;
+    //backup task info list
+    QList<BackupInfo> m_taskList;
     //list view right key menu
     QMenu* m_rightKeyMenu;
     //create new task dialog

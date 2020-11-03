@@ -8,17 +8,21 @@ class BackupInfo :
 public:
     BackupInfo() = delete;
     BackupInfo(const QString& sourceDirPath
-        , const QString& destDirPath);
+        , const QString& destDirPath
+        , const int syncDurationMinutes);
     BackupInfo(const BackupInfo&) = delete;
     BackupInfo(const BackupInfo&&) = delete;
     const QString& toString()const;
     const QString& getSourceDirPath()const;
     const QString& getDestinationDirPath()const;
+    const int getSyncDurationMinutes()const;
 private:
     //source dir path
     QString m_sourceDirPath;
     //destination dir path
     QString m_destDirPath;
+    //sync duration time in minutes
+    int m_syncDurationMinutes;
 };
 
 #endif // BACKUPINFO_H

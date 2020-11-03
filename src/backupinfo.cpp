@@ -1,8 +1,11 @@
 #include "backupinfo.h"
 
-BackupInfo::BackupInfo(const QString& sourceDirPath, const QString& destDirPath)
+BackupInfo::BackupInfo(const QString& sourceDirPath
+	, const QString& destDirPath
+	, const int syncDurationTime)
 	: m_sourceDirPath(sourceDirPath)
 	, m_destDirPath(destDirPath)
+	, m_syncDurationMinutes(syncDurationTime)
 {	}
 
 const QString& BackupInfo::toString() const
@@ -19,4 +22,9 @@ const QString& BackupInfo::getSourceDirPath() const
 const QString& BackupInfo::getDestinationDirPath() const
 {
 	return this->m_destDirPath;
+}
+
+const int BackupInfo::getSyncDurationMinutes() const
+{
+	return this->m_syncDurationMinutes;
 }

@@ -10,8 +10,8 @@ public:
     BackupInfo(const QString& sourceDirPath
         , const QString& destDirPath
         , const int syncDurationMinutes);
-    BackupInfo(const BackupInfo&) = delete;
-    BackupInfo(const BackupInfo&&) = delete;
+    BackupInfo(const BackupInfo&) = default;
+    BackupInfo(const BackupInfo&&) = default;
     const QString& toString()const;
     const QString& getSourceDirPath()const;
     const QString& getDestinationDirPath()const;

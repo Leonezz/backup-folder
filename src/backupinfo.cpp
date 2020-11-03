@@ -8,6 +8,14 @@ BackupInfo::BackupInfo(const QString& sourceDirPath
 	, m_syncDurationMinutes(syncDurationTime)
 {	}
 
+BackupInfo::BackupInfo(const BackupInfo&& rhs)
+{
+	//copy all data
+	this->m_destDirPath = rhs.getDestinationDirPath();
+	this->m_sourceDirPath = rhs.getSourceDirPath();
+	this->m_syncDurationMinutes = rhs.getSyncDurationMinutes();
+}
+
 const QString& BackupInfo::toString() const
 {
 	return this->m_sourceDirPath

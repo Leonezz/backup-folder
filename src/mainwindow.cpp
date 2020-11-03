@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     //checking files
     this->initFiles();
+    //init view
+    this->initView();
     //init context menu
     this->initMenu();
     //connect signal & slots
@@ -113,6 +115,35 @@ void MainWindow::initConnections()
         , this, &MainWindow::getTaskInfo);
 }
 
+void MainWindow::initView()
+{
+    //delegate
+    m_delegate = new ListViewDelegate();
+    ui->listView->setItemDelegate(m_delegate);
+    //set items spacing
+    ui->listView->setSpacing(15);
+    //set item view mode to icon view
+    ui->listView->setViewMode(QListView::IconMode);
+    //set enable drag
+    ui->listView->setDragEnabled(false);
+    //this makes program preforms better
+    ui->listView->setUniformItemSizes(true);
+    //set item movement free
+    ui->listView->setMovement(QListView::Free);
+    //set item re-layout automaticly
+    ui->listView->setResizeMode(QListView::Adjust);
+    //set item re-layout all together
+    ui->listView->setLayoutMode(QListView::SinglePass);
+    //set filter proxy model
+    m_filterProxyModel = new QSortFilterProxyModel(ui->listView);
+    m_model = new QStandardItemModel;
+    m_filterProxyModel->setSourceModel(m_model);
+    m_filterProxyModel->setFilterRole(Qt::UserRole);
+    m_filterProxyModel->setDynamicSortFilter(true);
+
+    ui->listView->setModel(m_filterProxyModel);
+}
+
 void MainWindow::getTaskInfo(const QString& sourceDir
     , const QString& destDir, const int syncDuration)
 {
@@ -121,6 +152,11 @@ void MainWindow::getTaskInfo(const QString& sourceDir
     {
         this->m_taskList.append(std::move(info));
         this->writeTasks();
+        QStandardItem* item = new QStandardItem;
+        item->setData(SyncStatus::Failed, Qt::UserRole);
+        item->setData(QVariant::fromValue(info), Qt::UserRole + 1);
+        item->setEditable(false);
+        m_model->appendRow(item);
     }
     //TODO: process the error
 }

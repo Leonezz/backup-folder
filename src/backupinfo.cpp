@@ -1,5 +1,9 @@
 #include "backupinfo.h"
 
+BackupInfo::BackupInfo()
+{
+}
+
 BackupInfo::BackupInfo(const QString& sourceDirPath
 	, const QString& destDirPath
 	, const int syncDurationTime)

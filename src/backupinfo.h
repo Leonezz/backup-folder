@@ -23,7 +23,7 @@ class BackupInfo :
 {
 public:
     //default constructor is useless
-    BackupInfo() = delete;
+    BackupInfo();
     //
     BackupInfo(const QString& sourceDirPath
         , const QString& destDirPath
@@ -46,5 +46,7 @@ private:
     //sync duration time in minutes
     int m_syncDurationMinutes;
 };
+
+Q_DECLARE_METATYPE(BackupInfo)
 
 #endif // BACKUPINFO_H

@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QStandardItemModel>
+#include <QSortFilterProxyModel>
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -10,12 +11,7 @@
 
 #include "backupinfo.h"
 #include "createtask.h"
-
-#define DEBUG
-#ifdef DEBUG
-#include <QDebug>
-#endif // DEBUG
-
+#include "listviewdelegate.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -24,7 +20,6 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -44,6 +39,8 @@ private:
     void initMenu();
     //init all the widget connections
     void initConnections();
+    //init the list view include the itemModel,delegate,filterProxyModel
+    void initView();
 private:
     //software config path in different OS
 #ifdef Q_OS_WIN32//Windows
@@ -54,8 +51,12 @@ private:
     const QString c_taskFileName = "tasks.json";
     //MainWindow UI
     Ui::MainWindow *ui;
+    //delegate to manage viewing items
+    ListViewDelegate* m_delegate;
     //item model of list view
     QStandardItemModel* m_model;
+    //filter model to filter items
+    QSortFilterProxyModel* m_filterProxyModel;
     //backup task info list
     QList<BackupInfo> m_taskList;
     //list view right key menu

@@ -32,9 +32,9 @@ public:
     BackupInfo(const BackupInfo&);
     BackupInfo(const BackupInfo&&);
     //toString function,use to write log
-    const QString& toString()const;
-    const QString& getSourceDirPath()const;
-    const QString& getDestinationDirPath()const;
+    const QString toString()const;
+    const QString getSourceDirPath()const;
+    const QString getDestinationDirPath()const;
     const int getSyncDurationMinutes()const;
     //self check
     InfoError selfCheck();

@@ -23,19 +23,19 @@ BackupInfo::BackupInfo(const BackupInfo&& rhs)
 	this->m_syncDurationMinutes = rhs.getSyncDurationMinutes();
 }
 
-const QString& BackupInfo::toString() const
+const QString BackupInfo::toString() const
 {
 	return this->m_sourceDirPath
 		+ "->" + this->m_destDirPath
 		+ "(" + QString::number(m_syncDurationMinutes) + ")";
 }
 
-const QString& BackupInfo::getSourceDirPath() const
+const QString BackupInfo::getSourceDirPath() const
 {
 	return this->m_sourceDirPath;
 }
 
-const QString& BackupInfo::getDestinationDirPath() const
+const QString BackupInfo::getDestinationDirPath() const
 {
 	return this->m_destDirPath;
 }

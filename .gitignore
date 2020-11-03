@@ -5,6 +5,7 @@ ui_*
 *.vcxproj
 *.filters
 .qmake.stash
+*.props
 
 # ignored folders
 /debug

@@ -44,3 +44,22 @@ const int BackupInfo::getSyncDurationMinutes() const
 {
 	return this->m_syncDurationMinutes;
 }
+
+InfoError BackupInfo::selfCheck()
+{
+	QDir dir;
+	dir.cd(m_sourceDirPath);
+	if (!dir.exists())
+		return InfoError::SourceNotExists;
+	dir.cd(m_destDirPath);
+	if (!dir.exists())
+		return InfoError::DestinationNotExisits;
+	//less than 10 minutes
+	if (m_syncDurationMinutes < 10)
+		return SyncDurationTimeShort;
+	//longer than 10 days
+	if (m_syncDurationMinutes > 14400)
+		return InfoError::SyncDurationTimeLong;
+	//TODO: dest dir spare space check
+	return InfoError::AllGood;
+}

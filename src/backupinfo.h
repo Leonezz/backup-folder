@@ -2,6 +2,7 @@
 #define BACKUPINFO_H
 
 #include <qobject.h>
+#include <QCryptographicHash>
 #include <QDir>
 //info may be invalid
 enum InfoError {
@@ -18,6 +19,15 @@ enum InfoError {
     //all good
     AllGood
 };
+struct TaskInfo
+{
+    //source dir path
+    QString _source;
+    //destination dir path
+    QString _dest;
+    //sync duration time in minutes
+    int _duration;
+};
 class BackupInfo :
     public QObject
 {
@@ -31,22 +41,17 @@ public:
     //copy constructor
     BackupInfo(const BackupInfo&);
     BackupInfo(const BackupInfo&&);
-    //toString function,use to write log
-    const QString toString()const;
+    //calculate Md5 hash
+    const QByteArray hash()const;
     const QString getSourceDirPath()const;
     const QString getDestinationDirPath()const;
     const int getSyncDurationMinutes()const;
     //self check
     InfoError selfCheck();
 private:
-    //source dir path
-    QString m_sourceDirPath;
-    //destination dir path
-    QString m_destDirPath;
-    //sync duration time in minutes
-    int m_syncDurationMinutes;
+    TaskInfo m_taskInfo;
 };
 
-Q_DECLARE_METATYPE(BackupInfo)
+Q_DECLARE_METATYPE(TaskInfo)
 
 #endif // BACKUPINFO_H

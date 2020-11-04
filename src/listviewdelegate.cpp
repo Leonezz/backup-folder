@@ -79,7 +79,7 @@ void ListViewDelegate::paint(QPainter* painter
 	SyncStatus status = (SyncStatus)(index.data(Qt::UserRole).toInt());
 	//get task info
 	QVariant variant = index.data(Qt::UserRole + 1);
-	BackupInfo info = variant.value<BackupInfo>();
+	const TaskInfo info = variant.value<TaskInfo>();
 
 	//sync status map to color of label
 	static const QMap<SyncStatus, QColor> map = {
@@ -97,15 +97,15 @@ void ListViewDelegate::paint(QPainter* painter
 	//draw source text label
 	painter->setPen(QPen(Qt::black));
 	painter->setFont(QFont("consolas", 12, QFont::Bold));
-	painter->drawText(sourceRect, Qt::AlignLeft, info.getSourceDirPath());
+	painter->drawText(sourceRect, Qt::AlignLeft, info._source);
 	
 	//draw dest text label
 	painter->setPen(QPen(Qt::gray));
 	painter->setFont(QFont("consolas", 10));
-	painter->drawText(destRect, Qt::AlignLeft, info.getDestinationDirPath());
+	painter->drawText(destRect, Qt::AlignLeft, info._dest);
 
 	//draw sync duration time
-	const int durationMinutes = info.getSyncDurationMinutes();
+	const int durationMinutes = info._duration;
 	QString durationTime = QString::number(durationMinutes / 60)
 		+ "h" + QString::number(durationMinutes % 60) + "m";
 	painter->setPen(QPen(Qt::GlobalColor::darkGray));

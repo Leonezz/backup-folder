@@ -66,16 +66,17 @@ void MainWindow::readTasks()
     //TODO: json parse error handle is needed
     QJsonObject jsonObjTask;
     //clear list first
-    m_taskList.clear();
+    //m_taskList.clear();
     for (auto&& jsonTask : jsonTaskArr)
     {
         jsonObjTask = jsonTask.toObject();
-        BackupInfo info{
+        TaskInfo info
+        {
              jsonObjTask.value("source").toString()
             ,jsonObjTask.value("destination").toString()
             ,jsonObjTask.value("duration").toInt()
         };
-        m_taskList.append(info);
+        //m_taskList.append(info);
         //test code
         QStandardItem* item = new QStandardItem;
         item->setData((SyncStatus)(qrand() % 4), Qt::UserRole);
@@ -90,13 +91,6 @@ void MainWindow::writeTasks()
     QJsonArray jsonTaskArr;
     QJsonObject jsonTask;
     //make json arr from m_taskList
-    for (auto&& task : m_taskList)
-    {
-        jsonTask.insert("source", task.getSourceDirPath());
-        jsonTask.insert("destination", task.getDestinationDirPath());
-        jsonTask.insert("duration", task.getSyncDurationMinutes());
-        jsonTaskArr.append(jsonTask);
-    }
     const QString taskFilePath = c_configPath
         + "/" + c_taskFileName;
     QFile taskFile(taskFilePath);
@@ -198,7 +192,7 @@ void MainWindow::getTaskInfo(const QString& sourceDir
     BackupInfo info(sourceDir, destDir, syncDuration);
     if (info.selfCheck() == InfoError::AllGood)
     {
-        this->m_taskList.append(std::move(info));
+        //this->m_taskList.append(std::move(info));
         this->writeTasks();
     }
     //TODO: process the error

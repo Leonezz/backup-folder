@@ -66,8 +66,7 @@ private:
     QStandardItemModel* m_model;
     //filter model to filter items
     QSortFilterProxyModel* m_filterProxyModel;
-    //backup task info list
-    QList<BackupInfo> m_taskList;
+    
     //list view right key menu
     QMenu* m_rightKeyMenu;
     //create new task dialog

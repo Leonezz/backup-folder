@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QPushButton>
 
 #include "backupinfo.h"
 #include "createtask.h"
@@ -24,10 +25,18 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+signals:
+    //emit when filter buttons pressed
+    //type tells which button is pressed
+    void filterButtonPressed(SyncStatus type
+        , bool checked);
 public slots:
+    //get task info from create task dialog
     void getTaskInfo(const QString& sourceDir
         , const QString& destDir
         , const int syncDurationMinutes);
+    //enable filter
+    void filterTask();
 private:
     //read tasks form global task file
     void readTasks();

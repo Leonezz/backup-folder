@@ -82,8 +82,8 @@ void ListViewDelegate::paint(QPainter* painter
 	BackupInfo info = variant.value<BackupInfo>();
 
 	//sync status map to color of label
-	static const QMap<SyncStatus, Qt::GlobalColor> map = {
-		{SyncStatus::Syncing,Qt::GlobalColor::blue},
+	static const QMap<SyncStatus, QColor> map = {
+		{SyncStatus::Syncing,QColor(170,170,0)},
 		{SyncStatus::Checking,Qt::GlobalColor::yellow},
 		{SyncStatus::Finished,Qt::GlobalColor::green},
 		{SyncStatus::Failed,Qt::GlobalColor::red}

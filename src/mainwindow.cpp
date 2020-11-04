@@ -24,6 +24,33 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::filterTask()
+{
+    //get pressed btn
+    QPushButton* btn = dynamic_cast<QPushButton*>(sender());
+    static const QMap<QPushButton*, SyncStatus> map = {
+        {ui->pushButtonFilterSyncing,SyncStatus::Syncing},
+        {ui->pushButtonFilterChecking,SyncStatus::Checking},
+        {ui->pushButtonFilterFinished,SyncStatus::Finished},
+        {ui->pushButtonFilterFailed,SyncStatus::Failed}
+    };
+    //get sync status
+    SyncStatus type = map[btn];
+    bool checked = !btn->isChecked();
+    //muti filter set
+    static QSet<SyncStatus> filterSet;
+    if (checked)
+        filterSet.insert(type);
+    else 
+        filterSet.remove(type);
+    //make filter regexp
+    QString regStr;
+    for (auto&& filterType : filterSet)
+        regStr += QString::number(filterType) + "|";
+    regStr = regStr.left(regStr.length() - 1);
+    m_filterProxyModel->setFilterRegExp(QRegExp(regStr));
+}
+
 void MainWindow::readTasks()
 {
     const QString taskFilePath = c_configPath
@@ -122,6 +149,18 @@ void MainWindow::initConnections()
     //get task info from m_newTaskDialog
     QObject::connect(this->m_newTaskDialog, &CreateTask::forwardTaskInfo
         , this, &MainWindow::getTaskInfo);
+    //filter syncing
+    QObject::connect(ui->pushButtonFilterSyncing, &QPushButton::pressed
+        , this, &MainWindow::filterTask);
+    //filter checking
+    QObject::connect(ui->pushButtonFilterChecking, &QPushButton::pressed
+        , this, &MainWindow::filterTask);
+    //filter finished
+    QObject::connect(ui->pushButtonFilterFinished, &QPushButton::pressed
+        , this, &MainWindow::filterTask);
+    //filter failed
+    QObject::connect(ui->pushButtonFilterFailed, &QPushButton::pressed
+        , this, &MainWindow::filterTask);
 }
 
 void MainWindow::initView()

@@ -9,6 +9,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QPushButton>
+#include <QStandardPaths>
 
 #include "backupinfo.h"
 #include "createtask.h"
@@ -59,7 +60,7 @@ private:
 #ifdef Q_OS_WIN32//Windows
     const QString c_configPath = "C:/\/ProgramData/BackupFolders";
 #elif defined Q_OS_LINUX//Linux
-    const QString c_configPath = "/usr/share/BackupFolders";
+    const QString c_configPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation)+"/.BackupFolders";
 #endif
     const QString c_taskFileName = "tasks.json";
     //MainWindow UI

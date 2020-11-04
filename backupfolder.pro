@@ -12,12 +12,14 @@ SOURCES += \
     src/main.cpp \
     src/mainwindow.cpp \
     src/backupinfo.cpp \
-    src/createtask.cpp
+    src/createtask.cpp \
+    src/listviewdelegate.cpp
 
 HEADERS += \
     src/mainwindow.h \
     src/backupinfo.h \
-    src/createtask.h
+    src/createtask.h \
+    src/listviewdelegate.h
 
 FORMS += \
     forms/mainwindow.ui \

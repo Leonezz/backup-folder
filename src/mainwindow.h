@@ -30,6 +30,8 @@ signals:
     //type tells which button is pressed
     void filterButtonPressed(SyncStatus type
         , bool checked);
+    //emit when m_taskMap are modified
+    void taskMapChanged();
 public slots:
     //get task info from create task dialog
     void getTaskInfo(const QString& sourceDir
@@ -37,6 +39,8 @@ public slots:
         , const int syncDurationMinutes);
     //enable filter
     void filterTask();
+    //update the list view
+    void updateListView();
 private:
     //read tasks form global task file
     void readTasks();
@@ -66,7 +70,7 @@ private:
     QStandardItemModel* m_model;
     //filter model to filter items
     QSortFilterProxyModel* m_filterProxyModel;
-    
+    QMap<QByteArray, QPair<TaskInfo,SyncStatus>> m_taskMap;
     //list view right key menu
     QMenu* m_rightKeyMenu;
     //create new task dialog

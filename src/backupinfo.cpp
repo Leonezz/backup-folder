@@ -47,6 +47,11 @@ const int BackupInfo::getSyncDurationMinutes() const
 	return this->m_taskInfo._duration;
 }
 
+const TaskInfo BackupInfo::getTaskInfo() const
+{
+	return m_taskInfo;
+}
+
 InfoError BackupInfo::selfCheck()
 {
 	QDir dir;

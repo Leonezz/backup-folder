@@ -51,6 +51,19 @@ void MainWindow::filterTask()
     m_filterProxyModel->setFilterRegExp(QRegExp(regStr));
 }
 
+void MainWindow::updateListView()
+{
+    this->m_model->clear();
+    for (auto&& task : m_taskMap)
+    {
+        QStandardItem* item = new QStandardItem;
+        item->setData(task.second, Qt::UserRole);
+        item->setData(QVariant::fromValue(task.first), Qt::UserRole + 1);
+        item->setEditable(false);
+        m_model->appendRow(item);
+    }
+}
+
 void MainWindow::readTasks()
 {
     const QString taskFilePath = c_configPath
@@ -65,25 +78,26 @@ void MainWindow::readTasks()
     taskFile.close();
     //TODO: json parse error handle is needed
     QJsonObject jsonObjTask;
-    //clear list first
-    //m_taskList.clear();
+    //clear map first
+    m_taskMap.clear();
     for (auto&& jsonTask : jsonTaskArr)
     {
         jsonObjTask = jsonTask.toObject();
-        TaskInfo info
-        {
+        BackupInfo bkinfo({
              jsonObjTask.value("source").toString()
             ,jsonObjTask.value("destination").toString()
             ,jsonObjTask.value("duration").toInt()
-        };
-        //m_taskList.append(info);
-        //test code
-        QStandardItem* item = new QStandardItem;
-        item->setData((SyncStatus)(qrand() % 4), Qt::UserRole);
-        item->setData(QVariant::fromValue(info), Qt::UserRole + 1);
-        item->setEditable(false);
-        m_model->appendRow(item);
+            });
+        QByteArray md5Hash = bkinfo.hash();
+        if (!m_taskMap.keys().contains(md5Hash))
+        {
+            m_taskMap[md5Hash] = QPair<TaskInfo, SyncStatus>{
+                bkinfo.getTaskInfo(),SyncStatus::Checking
+            };
+        }
     }
+    //update list view
+    emit taskMapChanged();
 }
 
 void MainWindow::writeTasks()
@@ -95,6 +109,14 @@ void MainWindow::writeTasks()
         + "/" + c_taskFileName;
     QFile taskFile(taskFilePath);
     //TODO: add file open error handle
+    for (auto&& task : m_taskMap)
+    {
+        const TaskInfo& info = task.first;
+        jsonTask.insert("source", info._source);
+        jsonTask.insert("destination", info._dest);
+        jsonTask.insert("duration", info._duration);
+        jsonTaskArr.append(jsonTask);
+    }
     taskFile.open(QIODevice::ReadWrite);
     taskFile.write(QJsonDocument(jsonTaskArr).toJson());
     taskFile.close();
@@ -131,15 +153,37 @@ void MainWindow::initMenu()
             m_newTaskDialog->exec();
         });
     m_rightKeyMenu->addAction(actionNewItem);
+    //action change the item
+    QAction* actionModified = new QAction(tr("change this"));
+    //action delete the item
+    QAction* actionDelete = new QAction(tr("delete this"));
     //context menu follows the cursor
     QObject::connect(this, &MainWindow::customContextMenuRequested,
         [=](const QPoint& curPos) {
+            //right key on an item
+            QItemSelectionModel* selectionModel = ui->listView->selectionModel();
+            if (selectionModel->selectedIndexes().empty())
+            {
+                m_rightKeyMenu->removeAction(actionModified);
+                m_rightKeyMenu->removeAction(actionDelete);
+            }
+            else if (selectionModel->selectedIndexes().length() == 1)
+            {
+                m_rightKeyMenu->addAction(actionModified);
+            }
+            else 
+            {
+                m_rightKeyMenu->addAction(actionDelete);
+            }
             m_rightKeyMenu->exec(mapToGlobal(curPos));
         });
 }
 
 void MainWindow::initConnections()
 {
+    //update list view when tasks info map changed
+    QObject::connect(this, &MainWindow::taskMapChanged
+        , this, &MainWindow::updateListView);
     //get task info from m_newTaskDialog
     QObject::connect(this->m_newTaskDialog, &CreateTask::forwardTaskInfo
         , this, &MainWindow::getTaskInfo);
@@ -176,6 +220,10 @@ void MainWindow::initView()
     ui->listView->setResizeMode(QListView::Adjust);
     //set item re-layout all together
     ui->listView->setLayoutMode(QListView::SinglePass);
+    //set item unselected when list view clicked
+    ui->listView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+    ui->listView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectItems);
+
     //set filter proxy model
     m_filterProxyModel = new QSortFilterProxyModel(ui->listView);
     m_model = new QStandardItemModel;
@@ -192,8 +240,20 @@ void MainWindow::getTaskInfo(const QString& sourceDir
     BackupInfo info(sourceDir, destDir, syncDuration);
     if (info.selfCheck() == InfoError::AllGood)
     {
-        //this->m_taskList.append(std::move(info));
-        this->writeTasks();
+        QByteArray md5Hash = info.hash();
+        //if new task already exists
+        if (m_taskMap.keys().contains(md5Hash))
+        {
+            //TODO: handle the add same task error
+        }
+        else 
+        {
+            m_taskMap[md5Hash] = QPair<TaskInfo, SyncStatus>{
+                info.getTaskInfo() ,SyncStatus::Checking
+            };
+            this->writeTasks();
+            emit taskMapChanged();
+        }
     }
     //TODO: process the error
 }

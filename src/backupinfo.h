@@ -46,6 +46,7 @@ public:
     const QString getSourceDirPath()const;
     const QString getDestinationDirPath()const;
     const int getSyncDurationMinutes()const;
+    const TaskInfo getTaskInfo()const;
     //self check
     InfoError selfCheck();
 private:

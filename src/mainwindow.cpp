@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->initMenu();
     //connect signal & slots
     this->initConnections();
+    //read task data
+    this->readTasks();
 }
 
 MainWindow::~MainWindow()
@@ -41,11 +43,18 @@ void MainWindow::readTasks()
     for (auto&& jsonTask : jsonTaskArr)
     {
         jsonObjTask = jsonTask.toObject();
-        m_taskList.append({
+        BackupInfo info{
              jsonObjTask.value("source").toString()
             ,jsonObjTask.value("destination").toString()
-            ,jsonObjTask.value("duration").toInt() 
-            });
+            ,jsonObjTask.value("duration").toInt()
+        };
+        m_taskList.append(info);
+        //test code
+        QStandardItem* item = new QStandardItem;
+        item->setData((SyncStatus)(qrand() % 4), Qt::UserRole);
+        item->setData(QVariant::fromValue(info), Qt::UserRole + 1);
+        item->setEditable(false);
+        m_model->appendRow(item);
     }
 }
 
@@ -121,15 +130,15 @@ void MainWindow::initView()
     m_delegate = new ListViewDelegate();
     ui->listView->setItemDelegate(m_delegate);
     //set items spacing
-    ui->listView->setSpacing(15);
+    ui->listView->setSpacing(10);
     //set item view mode to icon view
-    ui->listView->setViewMode(QListView::IconMode);
+    ui->listView->setViewMode(QListView::ListMode);
     //set enable drag
     ui->listView->setDragEnabled(false);
     //this makes program preforms better
     ui->listView->setUniformItemSizes(true);
-    //set item movement free
-    ui->listView->setMovement(QListView::Free);
+    //set item movement static
+    ui->listView->setMovement(QListView::Static);
     //set item re-layout automaticly
     ui->listView->setResizeMode(QListView::Adjust);
     //set item re-layout all together
@@ -152,11 +161,6 @@ void MainWindow::getTaskInfo(const QString& sourceDir
     {
         this->m_taskList.append(std::move(info));
         this->writeTasks();
-        QStandardItem* item = new QStandardItem;
-        item->setData(SyncStatus::Failed, Qt::UserRole);
-        item->setData(QVariant::fromValue(info), Qt::UserRole + 1);
-        item->setEditable(false);
-        m_model->appendRow(item);
     }
     //TODO: process the error
 }

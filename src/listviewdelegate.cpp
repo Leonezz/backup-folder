@@ -19,7 +19,7 @@ void ListViewDelegate::paint(QPainter* painter
 	if (!index.isValid())
 		return;
 	painter->save();
-	QStyleOptionViewItem viewOption(option);
+	//QStyleOptionViewItem viewOption(option);
 
 	//set item view rect
 	QRectF rect = option.rect;
@@ -27,18 +27,18 @@ void ListViewDelegate::paint(QPainter* painter
 	rect.setHeight(rect.height() - 1);
 
 	//round angle radius
-	const qreal radius = 7;
+	//const qreal radius = 7;
 	//draw the outline
 	QPainterPath path;
-	path.moveTo(rect.topRight() - QPointF(radius, 0));
-	path.lineTo(rect.topLeft() + QPointF(radius, 0));
-	path.quadTo(rect.topLeft(), rect.topLeft() + QPointF(0, radius));
-	path.lineTo(rect.bottomLeft() + QPointF(0, -radius));
-	path.quadTo(rect.bottomLeft(), rect.bottomLeft() + QPointF(radius, 0));
-	path.lineTo(rect.bottomRight() - QPointF(radius, 0));
-	path.quadTo(rect.bottomRight(), rect.bottomRight() + QPointF(0, -radius));
-	path.lineTo(rect.topRight() + QPointF(0, radius));
-	path.quadTo(rect.topRight(), rect.topRight() + QPointF(-radius, -0));
+	path.moveTo(rect.topRight());
+	path.lineTo(rect.topLeft());
+	//path.quadTo(rect.topLeft(), rect.topLeft() + QPointF(0, radius));
+	path.lineTo(rect.bottomLeft());
+	//path.quadTo(rect.bottomLeft(), rect.bottomLeft() + QPointF(radius, 0));
+	path.lineTo(rect.bottomRight());
+	//path.quadTo(rect.bottomRight(), rect.bottomRight() + QPointF(0, -radius));
+	path.lineTo(rect.topRight());
+	//path.quadTo(rect.topRight(), rect.topRight() + QPointF(-radius, -0));
 
 	//render the selected status
 	if (option.state.testFlag(QStyle::State_Selected))
@@ -63,14 +63,18 @@ void ListViewDelegate::paint(QPainter* painter
 	}
 
 	//source dir path display label rect
-	QRect sourceRect = QRect(rect.left() + 10, rect.top() + 10
+	const QRect sourceRect = QRect(rect.left() + 10, rect.top() + 10
 		, rect.width() - 30, 20);
 	//status color circle label rect
-	QRect statusRect = QRect(sourceRect.right(), rect.top() + 10
+	const QRect statusRect = QRect(sourceRect.right(), rect.top() + 10
 		, 10, 10);
 	//destination dir path display label rect
-	QRect destRect = QRect(rect.left() + 10, rect.bottom() - 25
-		, rect.width() - 10, 20);
+	const QRect destRect = QRect(rect.left() + 10, rect.bottom() - 25
+		, rect.width() / 2, 20);
+	//duration time diaplay label rect
+	const QRect durationTimeRect = QRect(rect.right() / 2, rect.bottom() - 25
+		, rect.width() / 2, 20);
+
 	//get status
 	SyncStatus status = (SyncStatus)(index.data(Qt::UserRole).toInt());
 	//get task info
@@ -100,6 +104,13 @@ void ListViewDelegate::paint(QPainter* painter
 	painter->setFont(QFont("consolas", 10));
 	painter->drawText(destRect, Qt::AlignLeft, info.getDestinationDirPath());
 
+	//draw sync duration time
+	const int durationMinutes = info.getSyncDurationMinutes();
+	QString durationTime = QString::number(durationMinutes / 60)
+		+ "h" + QString::number(durationMinutes % 60) + "m";
+	painter->setPen(QPen(Qt::GlobalColor::darkGray));
+	painter->setFont(QFont("consolas", 12, QFont::Bold));
+	painter->drawText(durationTimeRect, Qt::AlignRight, durationTime);
 	painter->restore();
 }
 
@@ -117,7 +128,7 @@ void ListViewDelegate::setModelData(QWidget* editor
 QSize ListViewDelegate::sizeHint(const QStyleOptionViewItem& option
 	, const QModelIndex& index) const
 {
-	return QSize(160, 60);
+	return QSize(option.rect.width(), 60);
 }
 
 void ListViewDelegate::updateEditorGeometry(QWidget* editor

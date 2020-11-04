@@ -20,7 +20,7 @@ public slots:
     void selectSourceDir();
     void selectDestDir();
     //update m_syncDurationMinutes
-    void setSyncDurationTime();
+    void setSyncDurationTime(int index);
 private:
     //init all the connections from buttons to slots
     void initConnections();

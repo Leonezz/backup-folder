@@ -170,6 +170,7 @@ void MainWindow::initMenu()
             else if (selectionModel->selectedIndexes().length() == 1)
             {
                 m_rightKeyMenu->addAction(actionModified);
+                m_rightKeyMenu->addAction(actionDelete);
             }
             else 
             {

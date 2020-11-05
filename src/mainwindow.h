@@ -10,6 +10,7 @@
 #include <QJsonObject>
 #include <QPushButton>
 #include <QStandardPaths>
+#include <QMessageBox>
 
 #include "backupinfo.h"
 #include "createtask.h"
@@ -42,11 +43,13 @@ public slots:
     void filterTask();
     //update the list view
     void updateListView();
+    //delete task
+    void deleteTasks(const QList<QByteArray>& keys);
+    //write all the tasks to global file
+    void writeTasks();
 private:
     //read tasks form global task file
     void readTasks();
-    //write all the tasks to global file
-    void writeTasks();
     //check the system folder and file
     void initFiles();
     //init list view right key menu and actions

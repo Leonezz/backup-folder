@@ -19,6 +19,14 @@ enum InfoError {
     //all good
     AllGood
 };
+namespace TaskInfoHash {
+    static const QByteArray md5(const QString& str)
+    {
+        return QCryptographicHash::hash(str.toLocal8Bit()
+            , QCryptographicHash::Md5);
+    }
+}
+
 struct TaskInfo
 {
     //source dir path

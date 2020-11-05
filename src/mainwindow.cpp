@@ -64,6 +64,15 @@ void MainWindow::updateListView()
     }
 }
 
+void MainWindow::deleteTasks(const QList<QByteArray>& keys)
+{
+    for (auto&& taskHash : keys)
+    {
+        m_taskMap.remove(taskHash);
+    }
+    emit taskMapChanged();
+}
+
 void MainWindow::readTasks()
 {
     const QString taskFilePath = c_configPath
@@ -117,7 +126,10 @@ void MainWindow::writeTasks()
         jsonTask.insert("duration", info._duration);
         jsonTaskArr.append(jsonTask);
     }
-    taskFile.open(QIODevice::ReadWrite);
+    //QIODevice::Truncate will clear the original file
+    taskFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+    QByteArray str = QJsonDocument(jsonTaskArr).toJson();
+    qDebug() << str;
     taskFile.write(QJsonDocument(jsonTaskArr).toJson());
     taskFile.close();
 }
@@ -157,15 +169,41 @@ void MainWindow::initMenu()
     QAction* actionModified = new QAction(tr("change this"));
     //action delete the item
     QAction* actionDelete = new QAction(tr("delete this"));
+    QObject::connect(actionDelete, &QAction::triggered,
+        [=](bool) {
+            QMessageBox::StandardButton btn =
+                (QMessageBox::StandardButton)QMessageBox::warning(this
+                    , tr("warning")//title
+                    , tr("Are you ture to delete selected tasks?")//text
+                    , QMessageBox::StandardButton::Yes//btn 1
+                    , QMessageBox::StandardButton::No);//btn 2
+            if (btn == QMessageBox::StandardButton::Yes)
+            {
+                //get selected items
+                QModelIndexList indexList = ui->listView->selectionModel()->selectedIndexes();
+                QList<QByteArray> deleteKeysList;
+                for (auto&& index : indexList)
+                {
+                    const TaskInfo&& indexInfo = 
+                        index.data(Qt::UserRole + 1).value<TaskInfo>();
+                    //calculate task hash
+                    const QByteArray&& md5Hash = 
+                        TaskInfoHash::md5(indexInfo._source + indexInfo._dest);
+                    deleteKeysList.append(md5Hash);
+                }
+                deleteTasks(deleteKeysList);
+            }
+                });
     //context menu follows the cursor
     QObject::connect(this, &MainWindow::customContextMenuRequested,
         [=](const QPoint& curPos) {
             //right key on an item
+            m_rightKeyMenu->removeAction(actionModified);
+            m_rightKeyMenu->removeAction(actionDelete);
             QItemSelectionModel* selectionModel = ui->listView->selectionModel();
             if (selectionModel->selectedIndexes().empty())
             {
-                m_rightKeyMenu->removeAction(actionModified);
-                m_rightKeyMenu->removeAction(actionDelete);
+
             }
             else if (selectionModel->selectedIndexes().length() == 1)
             {
@@ -185,6 +223,9 @@ void MainWindow::initConnections()
     //update list view when tasks info map changed
     QObject::connect(this, &MainWindow::taskMapChanged
         , this, &MainWindow::updateListView);
+    //update task file when tasks info map changed
+    QObject::connect(this, &MainWindow::taskMapChanged
+        , this, &MainWindow::writeTasks);
     //get task info from m_newTaskDialog
     QObject::connect(this->m_newTaskDialog, &CreateTask::forwardTaskInfo
         , this, &MainWindow::getTaskInfo);
@@ -252,7 +293,6 @@ void MainWindow::getTaskInfo(const QString& sourceDir
             m_taskMap[md5Hash] = QPair<TaskInfo, SyncStatus>{
                 info.getTaskInfo() ,SyncStatus::Checking
             };
-            this->writeTasks();
             emit taskMapChanged();
         }
     }

@@ -167,6 +167,19 @@ void MainWindow::initMenu()
     m_rightKeyMenu->addAction(actionNewItem);
     //action change the item
     QAction* actionModified = new QAction(tr("change this"));
+    QObject::connect(actionModified, &QAction::triggered,
+        [=](bool) {
+            //get item that is going to bo modified
+            const QModelIndexList &&selectedItem 
+                = ui->listView->selectionModel()->selectedIndexes();
+            //get taks info
+            const TaskInfo &&infoSelectedTask
+                = selectedItem.first().data(Qt::UserRole + 1).value<TaskInfo>();
+            const QByteArray&& taskHash = TaskInfoHash::md5(std::move(infoSelectedTask));
+            //remove the original task before call the newTaskDialog
+            m_taskMap.remove(taskHash);
+            m_newTaskDialog->exec();
+        });
     //action delete the item
     QAction* actionDelete = new QAction(tr("delete this"));
     QObject::connect(actionDelete, &QAction::triggered,
@@ -187,8 +200,8 @@ void MainWindow::initMenu()
                     const TaskInfo&& indexInfo = 
                         index.data(Qt::UserRole + 1).value<TaskInfo>();
                     //calculate task hash
-                    const QByteArray&& md5Hash = 
-                        TaskInfoHash::md5(indexInfo._source + indexInfo._dest);
+                    const QByteArray&& md5Hash =
+                        TaskInfoHash::md5(std::move(indexInfo));
                     deleteKeysList.append(md5Hash);
                 }
                 deleteTasks(deleteKeysList);

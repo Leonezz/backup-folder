@@ -19,14 +19,6 @@ enum InfoError {
     //all good
     AllGood
 };
-namespace TaskInfoHash {
-    static const QByteArray md5(const QString& str)
-    {
-        return QCryptographicHash::hash(str.toLocal8Bit()
-            , QCryptographicHash::Md5);
-    }
-}
-
 struct TaskInfo
 {
     //source dir path
@@ -36,6 +28,20 @@ struct TaskInfo
     //sync duration time in minutes
     int _duration;
 };
+
+namespace TaskInfoHash {
+    static const QByteArray md5(const QString& str)
+    {
+        return QCryptographicHash::hash(str.toLocal8Bit()
+            , QCryptographicHash::Md5);
+    }
+    static const QByteArray md5(const TaskInfo&& info)
+    {
+        return md5(info._source + info._dest);
+    }
+}
+
+
 class BackupInfo :
     public QObject
 {

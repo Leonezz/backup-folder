@@ -29,7 +29,7 @@ struct TaskInfo
     int _duration;
 };
 
-namespace TaskInfoHash {
+namespace HashTool {
     static const QByteArray md5(const QString& str)
     {
         return QCryptographicHash::hash(str.toLocal8Bit()
@@ -38,6 +38,31 @@ namespace TaskInfoHash {
     static const QByteArray md5(const TaskInfo&& info)
     {
         return md5(info._source + info._dest);
+    }
+    //calculate sha1 hash of file
+    static const QString sha1(const QString& filePath)
+    {
+        QFile sourceFile(filePath);
+        qint64 fileSize = sourceFile.size();
+        //read 10240 Bytes max one time
+        const qint64 bufSize = 10240;
+        if (sourceFile.open(QIODevice::ReadOnly))
+        {
+            char buffer[bufSize];
+            int bytesRead = 0;
+            int readSize = qMin(fileSize, bufSize);
+            QCryptographicHash sha1Hash(QCryptographicHash::Sha1);
+            while (readSize > 0
+                && (bytesRead = sourceFile.read(buffer, readSize)) > 0)
+            {
+                fileSize -= bytesRead;
+                sha1Hash.addData(buffer, bytesRead);
+                readSize = qMin(fileSize, bufSize);
+            }
+            sourceFile.close();
+            return QString(sha1Hash.result().toHex());
+        }
+        return {};
     }
 }
 

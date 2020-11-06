@@ -10,4 +10,4 @@ Therefore this software is designed to automaticly make backup for your folders 
 ... 
 
 # License
-MIT
+GPL

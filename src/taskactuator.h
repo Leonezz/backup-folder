@@ -24,6 +24,8 @@ private slots:
 	void copyFileToDestiantion();
 	//delete files of local
 	void deleteFiles();
+	//stop task when asked by controller
+	void terminate(const QString& hash);
 private:
 	//init the except set
 	void initExcept();
@@ -47,6 +49,7 @@ private:
 	QList<QString> m_backupList;
 	QList<QString> m_deleteList;
 	const TaskInfo m_info;
+	bool m_stop;
 	QTimer* m_timer;
 };
 

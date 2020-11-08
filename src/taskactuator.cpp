@@ -3,6 +3,7 @@
 TaskActuator::TaskActuator(const TaskInfo& info)
 	: m_info(info)
 	, m_timer(new QTimer)
+	, m_stop(false)
 {
 	this->initExcept();
 	this->initConnections();
@@ -21,6 +22,9 @@ void TaskActuator::copyFileToDestiantion()
 	emit updateStatus(HashTool::md5(m_info), SyncStatus::Syncing);
 	for (auto&& fileToCopy : m_backupList)
 	{
+		//stop when needed
+		if (m_stop)
+			return;
 		//get dest path
 		const QString absDestPath = fileToCopy.replace(m_info._source, m_info._dest);
 		//dest dir path is needed when it does not exist
@@ -46,13 +50,26 @@ void TaskActuator::deleteFiles()
 {
 	emit updateStatus(HashTool::md5(m_info), SyncStatus::Syncing);
 	for (auto&& fileToDelete : m_deleteList)
-	{
+	{		
+		//stop when needed
+		if (m_stop)
+			return;
 		QFile file(fileToDelete);
 		if (file.exists())
 			file.remove();
 	}
 	m_deleteList.clear();
 	emit updateStatus(HashTool::md5(m_info), SyncStatus::Finished);
+}
+
+void TaskActuator::terminate(const QString& hash)
+{
+	if (hash != HashTool::md5(m_info))
+		return;
+	m_stop = true;
+	QDir dir;
+	dir.remove(m_info._source + "/" + c_configFileFolder);
+	m_timer->stop();
 }
 
 void TaskActuator::initExcept()
@@ -127,7 +144,10 @@ void TaskActuator::checkRepoStatus()
 	QVariantMap lastMap = doc.object().toVariantMap();
 	//compare file info between last and local
 	for (auto&& path : lastMap.keys())
-	{
+	{		
+		//stop when needed
+		if (m_stop)
+			return;
 		if (localMap.contains(path))
 		{
 			const QVariantMap& lastInfo = lastMap.value(path).toMap();
@@ -158,7 +178,10 @@ void TaskActuator::checkRepoStatus()
 	}
 	//for files exists in local but does not exist in last,add them to backup list
 	for (auto&& addedFile : localMap.keys())
-	{
+	{	
+		//stop when needed
+		if (m_stop)
+			return;
 		m_backupList.append(addedFile);
 	}
 	//copy
@@ -190,6 +213,9 @@ void TaskActuator::readIgnoreFile()
 	}
 	while (!ignoreFile.atEnd())
 	{
+		//stop when needed
+		if (m_stop)
+			return;
 		m_except.insert(ignoreFile.readLine());
 	}
 	ignoreFile.close();
@@ -207,7 +233,10 @@ void TaskActuator::buildFileInfoJson(QJsonObject* root)
 	QJsonObject object;
 	//DFS
 	while (!stack.isEmpty())
-	{
+	{		
+		//stop when needed
+		if (m_stop)
+			return;
 		const QFileInfo& info = stack.pop();
 		if (isIgnored(info.fileName()))
 			continue;

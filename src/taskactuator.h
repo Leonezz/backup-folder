@@ -16,10 +16,12 @@ public:
 public slots:
 	void start(const QString& hash);
 	//stop task when asked by controller
-	void terminate(const QString& hash);
+	void terminateTask(const QString& hash);
 signals:
+	void terminated();
 	void statusChecked();
 	void updateStatus(const QString& taskHash, const SyncStatus status);
+
 private slots:
 	//check the dest folder see if the backup is deleted
 	void checkRepoStatus();

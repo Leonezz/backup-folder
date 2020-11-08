@@ -38,7 +38,7 @@ signals:
     //emit when m_taskMap are modified
     void taskMapChanged();
     void taskInfoColected(const TaskInfo& info);
-    void taskDeleted(const QString& taskId);
+    void deleteATaskById(const QString& taskId);
     //task start
     void startTaskActionTriggered(const QString& taskid);
 public slots:

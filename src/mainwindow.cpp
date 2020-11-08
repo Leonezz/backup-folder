@@ -73,7 +73,7 @@ void MainWindow::deleteTasks(const QList<QString>& keys)
 {
     for (auto&& taskHash : keys)
     {
-        emit taskDeleted(taskHash);
+        emit deleteATaskById(taskHash);
         m_taskMap.remove(taskHash);
     }
     emit taskMapChanged();
@@ -272,13 +272,17 @@ void MainWindow::initConnections()
     //filter failed
     QObject::connect(ui->pushButtonFilterFailed, &QPushButton::pressed
         , this, &MainWindow::filterTask);
+    //add tasks after task info was colected
     QObject::connect(this, &MainWindow::taskInfoColected
         , m_taskController, &TaskController::addTask);
-    QObject::connect(this, &MainWindow::taskDeleted
-        , m_taskController, &TaskController::taskDeleted);
+    //delete a task by its id when the delete action was triggered
+    QObject::connect(this, &MainWindow::deleteATaskById
+        , m_taskController, &TaskController::deleteTask);
+    //restart the update task when the restart action was triggered
     QObject::connect(this, &MainWindow::startTaskActionTriggered
-        , m_taskController, &TaskController::taskRefershed);
-    QObject::connect(m_taskController, &TaskController::updateSyncStatus
+        , m_taskController, &TaskController::taskRestart);
+    //update the syncstatus to the listview when status changed
+    QObject::connect(m_taskController, &TaskController::syncStatusChanged
         , this, &MainWindow::updateSyncStatus);
 }
 
@@ -318,8 +322,10 @@ void MainWindow::initView()
 InfoError MainWindow::checkTaskInfo(const TaskInfo& info)
 {
     QDir dir;
+    //source dir path does not exist
     if (!dir.exists(info._source))
         return InfoError::SourceNotExists;
+    //the path that is going to be the backup folder aready exists
     if (dir.exists(info._dest))
         return InfoError::DestinationFolderAdreadyExists;
     QString dest;
@@ -327,12 +333,16 @@ InfoError MainWindow::checkTaskInfo(const TaskInfo& info)
     destList.removeLast();
     for (auto&& ch : destList)
         dest += ch + "/";
+    //the parent folder of the backup folder does not exist
     if (!dir.exists(dest))
         return InfoError::DestinationNotExisits;
+    //duration time less than 10 minutes is too short
     if (info._duration < 10)
         return InfoError::SyncDurationTimeShort;
+    //duration time longer than 14400 minutes is too long
     if (info._duration > 14400)
         return InfoError::SyncDurationTimeLong;
+    //the destination folder drive need more free space than the source folder size
     if (getDirSize(info._source) > QStorageInfo(info._dest).bytesAvailable())
         return InfoError::DestinationSpaceNotEnough;
     return InfoError::AllGood;

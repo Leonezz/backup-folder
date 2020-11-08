@@ -84,7 +84,7 @@ void TaskActuator::deleteFiles()
 	emit updateStatus(m_hash, m_status);
 }
 
-void TaskActuator::terminate(const QString& hash)
+void TaskActuator::terminateTask(const QString& hash)
 {
 	if (hash != this->m_hash)
 		return;
@@ -100,6 +100,7 @@ void TaskActuator::terminate(const QString& hash)
     }
     bool d = dir.rmpath(folderName);
 	m_timer->stop();
+	emit terminated();
 }
 
 void TaskActuator::initExcept()

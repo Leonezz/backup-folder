@@ -25,30 +25,39 @@ void TaskController::addTask(const TaskInfo& info)
 	const QString taskId = HashTool::md5(info);
 	m_actuactorMap.insert(taskId, actuator);
 	QObject::connect(this, &TaskController::startTask, actuator, &TaskActuator::start);
-	QObject::connect(this, &TaskController::stopTask, actuator, &TaskActuator::terminate);
+	QObject::connect(this, &TaskController::stopTask, actuator, &TaskActuator::terminateTask);
 	QObject::connect(actuator, &TaskActuator::updateStatus, this, &TaskController::forwardSyncStatus);
 	QThread* thread = new QThread;
+	//when actuator terminated,quit the thread
+	QObject::connect(actuator, &TaskActuator::terminated
+		, [=]() {
+			thread->quit();
+		});
+	//when thread quited,delete the thread and actuator
+	QObject::connect(thread, &QThread::finished
+		, [=]() {
+			thread->deleteLater();
+			actuator->deleteLater();
+		});
 	m_thread.insert(taskId, thread);
 	actuator->moveToThread(thread);
 	thread->start();
-	taskRefershed(taskId);
+	taskRestart(taskId);
 }
 
-void TaskController::taskDeleted(const QString& id)
+void TaskController::deleteTask(const QString& id)
 {
 	emit stopTask(id);
-	m_thread.value(id)->quit();
-	m_thread.value(id)->wait();
 	m_thread.remove(id);
 	m_actuactorMap.remove(id);
 }
 
-void TaskController::taskRefershed(const QString& id)
+void TaskController::taskRestart(const QString& id)
 {
 	emit startTask(id);
 }
 
 void TaskController::forwardSyncStatus(const QString& id, const SyncStatus status)
 {
-	emit updateSyncStatus(id, status);
+	emit syncStatusChanged(id, status);
 }

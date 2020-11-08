@@ -35,6 +35,10 @@ namespace HashTool {
         return QCryptographicHash::hash(str.toLocal8Bit()
             , QCryptographicHash::Md5);
     }
+    static const QByteArray md5(const TaskInfo& info)
+    {
+        return md5(info._source + info._dest);
+    }
     static const QByteArray md5(const TaskInfo&& info)
     {
         return md5(info._source + info._dest);

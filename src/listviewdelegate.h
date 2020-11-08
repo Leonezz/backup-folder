@@ -4,18 +4,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include "backupinfo.h"
-
-//sync status flag
-enum SyncStatus {
-	//task is syncing
-	Syncing,
-	//task is checking differents
-	Checking,
-	//task succeed
-	Finished,
-	//task failed
-	Failed
-};
+#include "syncstatus.h"
 
 class ListViewDelegate : public QStyledItemDelegate
 {

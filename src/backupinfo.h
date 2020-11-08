@@ -44,7 +44,7 @@ namespace HashTool {
         return md5(info._source + info._dest);
     }
     //calculate sha1 hash of file
-    static const QString sha1(const QString& filePath)
+    static const QString sha1HashOfFile(const QString& filePath)
     {
         QFile sourceFile(filePath);
         qint64 fileSize = sourceFile.size();
@@ -69,32 +69,6 @@ namespace HashTool {
         return {};
     }
 }
-
-
-class BackupInfo :
-    public QObject
-{
-public:
-    //default constructor is useless
-    BackupInfo();
-    //
-    BackupInfo(const QString& sourceDirPath
-        , const QString& destDirPath
-        , const int syncDurationMinutes);
-    //copy constructor
-    BackupInfo(const BackupInfo&);
-    BackupInfo(const BackupInfo&&);
-    //calculate Md5 hash
-    const QByteArray hash()const;
-    const QString getSourceDirPath()const;
-    const QString getDestinationDirPath()const;
-    const int getSyncDurationMinutes()const;
-    const TaskInfo getTaskInfo()const;
-    //self check
-    InfoError selfCheck();
-private:
-    TaskInfo m_taskInfo;
-};
 
 Q_DECLARE_METATYPE(TaskInfo)
 

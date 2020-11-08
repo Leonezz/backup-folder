@@ -175,7 +175,7 @@ void MainWindow::initMenu()
             //get taks info
             const TaskInfo &&infoSelectedTask
                 = selectedItem.first().data(Qt::UserRole + 1).value<TaskInfo>();
-            const QByteArray&& taskHash = TaskInfoHash::md5(std::move(infoSelectedTask));
+            const QByteArray&& taskHash = HashTool::md5(std::move(infoSelectedTask));
             //remove the original task before call the newTaskDialog
             m_taskMap.remove(taskHash);
             m_newTaskDialog->exec();
@@ -201,7 +201,7 @@ void MainWindow::initMenu()
                         index.data(Qt::UserRole + 1).value<TaskInfo>();
                     //calculate task hash
                     const QByteArray&& md5Hash =
-                        TaskInfoHash::md5(std::move(indexInfo));
+                        HashTool::md5(std::move(indexInfo));
                     deleteKeysList.append(md5Hash);
                 }
                 deleteTasks(deleteKeysList);

@@ -27,7 +27,7 @@ BackupInfo::BackupInfo(const BackupInfo&& rhs)
 
 const QByteArray BackupInfo::hash() const
 {
-	return TaskInfoHash::md5(m_taskInfo._source + m_taskInfo._dest);
+	return HashTool::md5(m_taskInfo._source + m_taskInfo._dest);
 }
 
 const QString BackupInfo::getSourceDirPath() const

@@ -61,7 +61,7 @@ private:
 private:
     //software config path in different OS
 #ifdef Q_OS_WIN32//Windows
-    const QString c_configPath = "C:/\/ProgramData/BackupFolders";
+    const QString c_configPath = "C:/ProgramData/BackupFolders";
 #elif defined Q_OS_LINUX//Linux
     const QString c_configPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation)+"/.BackupFolders";
 #endif

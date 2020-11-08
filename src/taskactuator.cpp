@@ -89,8 +89,16 @@ void TaskActuator::terminate(const QString& hash)
 	if (hash != this->m_hash)
 		return;
 	m_stop = true;
-	QDir dir;
-	dir.remove(m_info._source + "/" + c_configFileFolder);
+    const QString folderName = m_info._source + "/" + c_configFileFolder;
+    QDir dir(folderName);
+    const QFileInfoList fileInfos = dir.entryInfoList(QDir::Files | QDir::Hidden);
+    for(auto && info : fileInfos)
+    {
+        QFile file(info.absoluteFilePath());
+        if(file.exists())
+            file.remove();
+    }
+    bool d = dir.rmpath(folderName);
 	m_timer->stop();
 }
 

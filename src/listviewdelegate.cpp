@@ -64,7 +64,7 @@ void ListViewDelegate::paint(QPainter* painter
 
 	//source dir path display label rect
 	const QRect sourceRect = QRect(rect.left() + 10, rect.top() + 10
-		, rect.width() - 30, 20);
+        , rect.width() - 30, 25);
 	//status color circle label rect
 	const QRect statusRect = QRect(sourceRect.right(), rect.top() + 10
 		, 10, 10);
@@ -128,7 +128,7 @@ void ListViewDelegate::setModelData(QWidget* editor
 QSize ListViewDelegate::sizeHint(const QStyleOptionViewItem& option
 	, const QModelIndex& index) const
 {
-	return QSize(option.rect.width(), 60);
+    return QSize(option.rect.width(), 60);
 }
 
 void ListViewDelegate::updateEditorGeometry(QWidget* editor

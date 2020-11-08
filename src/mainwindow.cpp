@@ -5,6 +5,11 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_newTaskDialog(new CreateTask(this))
+    , m_taskController(new TaskController)
+    , m_actionNewItem(new QAction(tr("new task")))
+    , m_actionBackupNow(new QAction(tr("backup now")))
+    , m_actionModified(new QAction(tr("midify task")))
+    , m_actionDelete(new QAction(tr("delete task")))
 {
     ui->setupUi(this);
     //checking files
@@ -64,10 +69,11 @@ void MainWindow::updateListView()
     }
 }
 
-void MainWindow::deleteTasks(const QList<QByteArray>& keys)
+void MainWindow::deleteTasks(const QList<QString>& keys)
 {
     for (auto&& taskHash : keys)
     {
+        emit taskDeleted(taskHash);
         m_taskMap.remove(taskHash);
     }
     emit taskMapChanged();
@@ -92,17 +98,18 @@ void MainWindow::readTasks()
     for (auto&& jsonTask : jsonTaskArr)
     {
         jsonObjTask = jsonTask.toObject();
-        BackupInfo bkinfo({
+        TaskInfo taskInfo{
              jsonObjTask.value("source").toString()
             ,jsonObjTask.value("destination").toString()
             ,jsonObjTask.value("duration").toInt()
-            });
-        QByteArray md5Hash = bkinfo.hash();
+        };
+        const QString& md5Hash = HashTool::md5(taskInfo);
         if (!m_taskMap.keys().contains(md5Hash))
         {
             m_taskMap[md5Hash] = QPair<TaskInfo, SyncStatus>{
-                bkinfo.getTaskInfo(),SyncStatus::Checking
+                taskInfo,SyncStatus::Checking
             };
+            emit taskInfoColected(std::move(taskInfo));
         }
     }
     //update list view
@@ -129,9 +136,16 @@ void MainWindow::writeTasks()
     //QIODevice::Truncate will clear the original file
     taskFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
     QByteArray str = QJsonDocument(jsonTaskArr).toJson();
-    qDebug() << str;
     taskFile.write(QJsonDocument(jsonTaskArr).toJson());
     taskFile.close();
+}
+
+void MainWindow::updateSyncStatus(const QString& taskId, const SyncStatus status)
+{
+    QPair<TaskInfo, SyncStatus> pair = m_taskMap.value(taskId);
+    pair.second = status;
+    m_taskMap.insert(taskId, std::move(pair));
+    emit updateListView();
 }
 
 void MainWindow::initFiles()
@@ -140,8 +154,7 @@ void MainWindow::initFiles()
     //dir check
     if (!dir.exists())
         dir.mkpath(this->c_configPath);
-    const QString taskFilePath = c_configPath + "/"
-        + c_taskFileName;
+    const QString taskFilePath = c_configPath + "/" + c_taskFileName;
     QFile taskFile(taskFilePath);
     //check task files
     if (!taskFile.exists())
@@ -157,17 +170,26 @@ void MainWindow::initMenu()
     this->m_rightKeyMenu = new QMenu(this);
     //context menu policy set to custom
     setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-    //action call new task edit dialog
-    QAction* actionNewItem = new QAction(tr("new Task"));
     //connect the triggered signal of actionNewItem to the createTaskDialog exec
-    QObject::connect(actionNewItem, &QAction::triggered,
+    QObject::connect(m_actionNewItem, &QAction::triggered,
         [=](bool) {
             m_newTaskDialog->exec();
         });
-    m_rightKeyMenu->addAction(actionNewItem);
-    //action change the item
-    QAction* actionModified = new QAction(tr("change this"));
-    QObject::connect(actionModified, &QAction::triggered,
+    m_rightKeyMenu->addAction(m_actionNewItem);
+    QObject::connect(m_actionBackupNow, &QAction::triggered,
+        [=](bool) {
+            const QModelIndexList&& selectedItem
+                = ui->listView->selectionModel()->selectedIndexes();
+            for (auto&& index : selectedItem)
+            {
+                const QString& taskId 
+                    = HashTool::md5(std::move(index.data(Qt::UserRole + 1).value<TaskInfo>()));
+                emit startTaskActionTriggered(taskId);
+            }
+        });
+    m_rightKeyMenu->addAction(m_actionBackupNow);
+
+    QObject::connect(m_actionModified, &QAction::triggered,
         [=](bool) {
             //get item that is going to bo modified
             const QModelIndexList &&selectedItem 
@@ -175,14 +197,12 @@ void MainWindow::initMenu()
             //get taks info
             const TaskInfo &&infoSelectedTask
                 = selectedItem.first().data(Qt::UserRole + 1).value<TaskInfo>();
-            const QByteArray&& taskHash = HashTool::md5(std::move(infoSelectedTask));
+            const QString&& taskHash = HashTool::md5(std::move(infoSelectedTask));
             //remove the original task before call the newTaskDialog
             m_taskMap.remove(taskHash);
             m_newTaskDialog->exec();
         });
-    //action delete the item
-    QAction* actionDelete = new QAction(tr("delete this"));
-    QObject::connect(actionDelete, &QAction::triggered,
+    QObject::connect(m_actionDelete, &QAction::triggered,
         [=](bool) {
             QMessageBox::StandardButton btn =
                 (QMessageBox::StandardButton)QMessageBox::warning(this
@@ -194,14 +214,12 @@ void MainWindow::initMenu()
             {
                 //get selected items
                 QModelIndexList indexList = ui->listView->selectionModel()->selectedIndexes();
-                QList<QByteArray> deleteKeysList;
+                QList<QString> deleteKeysList;
                 for (auto&& index : indexList)
                 {
-                    const TaskInfo&& indexInfo = 
-                        index.data(Qt::UserRole + 1).value<TaskInfo>();
                     //calculate task hash
-                    const QByteArray&& md5Hash =
-                        HashTool::md5(std::move(indexInfo));
+                    const QString&& md5Hash =
+                        HashTool::md5(std::move(index.data(Qt::UserRole + 1).value<TaskInfo>()));
                     deleteKeysList.append(md5Hash);
                 }
                 deleteTasks(deleteKeysList);
@@ -211,8 +229,8 @@ void MainWindow::initMenu()
     QObject::connect(this, &MainWindow::customContextMenuRequested,
         [=](const QPoint& curPos) {
             //right key on an item
-            m_rightKeyMenu->removeAction(actionModified);
-            m_rightKeyMenu->removeAction(actionDelete);
+            m_rightKeyMenu->removeAction(m_actionModified);
+            m_rightKeyMenu->removeAction(m_actionDelete);
             QItemSelectionModel* selectionModel = ui->listView->selectionModel();
             if (selectionModel->selectedIndexes().empty())
             {
@@ -220,12 +238,12 @@ void MainWindow::initMenu()
             }
             else if (selectionModel->selectedIndexes().length() == 1)
             {
-                m_rightKeyMenu->addAction(actionModified);
-                m_rightKeyMenu->addAction(actionDelete);
+                m_rightKeyMenu->addAction(m_actionModified);
+                m_rightKeyMenu->addAction(m_actionDelete);
             }
             else 
             {
-                m_rightKeyMenu->addAction(actionDelete);
+                m_rightKeyMenu->addAction(m_actionDelete);
             }
             m_rightKeyMenu->exec(mapToGlobal(curPos));
         });
@@ -254,6 +272,14 @@ void MainWindow::initConnections()
     //filter failed
     QObject::connect(ui->pushButtonFilterFailed, &QPushButton::pressed
         , this, &MainWindow::filterTask);
+    QObject::connect(this, &MainWindow::taskInfoColected
+        , m_taskController, &TaskController::addTask);
+    QObject::connect(this, &MainWindow::taskDeleted
+        , m_taskController, &TaskController::taskDeleted);
+    QObject::connect(this, &MainWindow::startTaskActionTriggered
+        , m_taskController, &TaskController::taskRefershed);
+    QObject::connect(m_taskController, &TaskController::updateSyncStatus
+        , this, &MainWindow::updateSyncStatus);
 }
 
 void MainWindow::initView()
@@ -289,13 +315,51 @@ void MainWindow::initView()
     ui->listView->setModel(m_filterProxyModel);
 }
 
+InfoError MainWindow::checkTaskInfo(const TaskInfo& info)
+{
+    QDir dir;
+    if (!dir.exists(info._source))
+        return InfoError::SourceNotExists;
+    if (dir.exists(info._dest))
+        return InfoError::DestinationFolderAdreadyExists;
+    QString dest;
+    QStringList destList = info._dest.split("/");
+    destList.removeLast();
+    for (auto&& ch : destList)
+        dest += ch + "/";
+    if (!dir.exists(dest))
+        return InfoError::DestinationNotExisits;
+    if (info._duration < 10)
+        return InfoError::SyncDurationTimeShort;
+    if (info._duration > 14400)
+        return InfoError::SyncDurationTimeLong;
+    if (getDirSize(info._source) > QStorageInfo(info._dest).bytesAvailable())
+        return InfoError::DestinationSpaceNotEnough;
+    return InfoError::AllGood;
+}
+
+quint64 MainWindow::getDirSize(const QString& path)
+{
+    QDir dir(path);
+    quint64 size = 0;
+    for (auto&& fileInfo : dir.entryInfoList(QDir::Files))
+    {
+        size += fileInfo.size();
+    }
+    for (auto&& subDir : dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot))
+    {
+        size += getDirSize(path + "/" + subDir);
+    }
+    return size;
+}
+
 void MainWindow::getTaskInfo(const QString& sourceDir
     , const QString& destDir, const int syncDuration)
 {
-    BackupInfo info(sourceDir, destDir, syncDuration);
-    if (info.selfCheck() == InfoError::AllGood)
+    const TaskInfo info{ sourceDir, destDir, syncDuration };
+    if (this->checkTaskInfo(info) == InfoError::AllGood)
     {
-        QByteArray md5Hash = info.hash();
+        const QString& md5Hash = HashTool::md5(info);
         //if new task already exists
         if (m_taskMap.keys().contains(md5Hash))
         {
@@ -304,9 +368,10 @@ void MainWindow::getTaskInfo(const QString& sourceDir
         else 
         {
             m_taskMap[md5Hash] = QPair<TaskInfo, SyncStatus>{
-                info.getTaskInfo() ,SyncStatus::Checking
+                info ,SyncStatus::Checking
             };
             emit taskMapChanged();
+            emit taskInfoColected(info);
         }
     }
     //TODO: process the error

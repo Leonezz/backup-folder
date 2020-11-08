@@ -30,6 +30,8 @@ void TaskController::addTask(const TaskInfo& info)
 	QThread* thread = new QThread;
 	m_thread.insert(taskId, thread);
 	actuator->moveToThread(thread);
+	thread->start();
+	taskRefershed(taskId);
 }
 
 void TaskController::taskDeleted(const QString& id)

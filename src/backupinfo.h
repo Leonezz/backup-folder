@@ -10,6 +10,8 @@ enum InfoError {
     SourceNotExists,
     //dest dir path does not exist
     DestinationNotExisits,
+    //dest dir path adready exists
+    DestinationFolderAdreadyExists,
     //dest dir spare space not big enough
     DestinationSpaceNotEnough,
     //sync duration time too short
@@ -30,16 +32,16 @@ struct TaskInfo
 };
 
 namespace HashTool {
-    static const QByteArray md5(const QString& str)
+    static const QString md5(const QString& str)
     {
         return QCryptographicHash::hash(str.toLocal8Bit()
-            , QCryptographicHash::Md5);
+            , QCryptographicHash::Md5).toHex();
     }
-    static const QByteArray md5(const TaskInfo& info)
+    static const QString md5(const TaskInfo& info)
     {
         return md5(info._source + info._dest);
     }
-    static const QByteArray md5(const TaskInfo&& info)
+    static const QString md5(const TaskInfo&& info)
     {
         return md5(info._source + info._dest);
     }

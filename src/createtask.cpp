@@ -25,6 +25,9 @@ void CreateTask::selectDestDir()
 		"/"	//select from "/"
 	);
 	//show the path in the lineEdit
+	m_destDirPath.replace(QDir::separator(), "/");
+	m_destDirPath += "/" + m_souceDirPath.split("/").last();
+	m_destDirPath.replace("//", "/");
 	ui->lineEditDestDir->setText(m_destDirPath);
 }
 
@@ -66,5 +69,6 @@ void CreateTask::selectSourceDir()
 		"/"	//select from "/"
 	);
 	//show the path in the lineEdit
+	m_souceDirPath.replace(QDir::separator(), "/");
 	ui->lineEditsourceDir->setText(m_souceDirPath);
 }

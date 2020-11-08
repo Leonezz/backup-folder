@@ -14,7 +14,7 @@ class TaskActuator : public QObject
 public:
 	TaskActuator(const TaskInfo& info);
 public slots:
-	void start();
+	void start(const QString& hash);
 	//stop task when asked by controller
 	void terminate(const QString& hash);
 signals:
@@ -51,6 +51,8 @@ private:
 	QList<QString> m_deleteList;
 	const TaskInfo m_info;
 	bool m_stop;
+	SyncStatus m_status;
+	const QString m_hash;
 	QTimer* m_timer;
 };
 

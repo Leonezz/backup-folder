@@ -2,14 +2,27 @@
 
 TaskActuator::TaskActuator(const TaskInfo& info)
 	: m_info(info)
-	, m_timer(new QTimer)
+	, m_timer(nullptr)
 	, m_stop(false)
+	, m_status(SyncStatus::Finished)
+	, m_hash(HashTool::md5(info))
 {
-
 }
 
-void TaskActuator::start()
+void TaskActuator::start(const QString& hash)
 {
+	if (m_timer != nullptr)
+	{
+		m_timer->stop();
+		delete m_timer;
+	}
+	m_timer = new QTimer;
+	if (hash != this->m_hash)
+		return;
+	//if task aready started,ignore the start signal
+	if ((this->m_status & SyncStatus::Syncing) || 
+		(this->m_status & SyncStatus::Checking))
+		return;
 	this->initExcept();
 	this->initConnections();
 	//init work folder when program start
@@ -20,19 +33,22 @@ void TaskActuator::start()
 
 void TaskActuator::copyFileToDestiantion()
 {
-	emit updateStatus(HashTool::md5(m_info), SyncStatus::Syncing);
-	for (auto&& fileToCopy : m_backupList)
+	this->m_status = SyncStatus::Syncing;
+	emit updateStatus(m_hash, m_status);
+	for (const auto& fileToCopy : m_backupList)
 	{
 		//stop when needed
 		if (m_stop)
 			return;
 		//get dest path
-		const QString absDestPath = fileToCopy.replace(m_info._source, m_info._dest);
+		QString absDestPath = fileToCopy;
+		absDestPath.replace(m_info._source, m_info._dest);
 		//dest dir path is needed when it does not exist
 		QString destDir;
-		const QStringList&& destSplit = absDestPath.split("/");
-		for (int i = 0; i < destSplit.length() - 1; ++i)
-			destDir += destSplit.at(i);
+		QStringList destSplit = absDestPath.split("/");
+		destSplit.removeLast();
+		for (auto&& ch : destSplit)
+			destDir += ch + "/";
 		//if dest dir does not exist,make one
 		QDir dir(destDir);
 		if (!dir.exists(destDir))
@@ -44,28 +60,33 @@ void TaskActuator::copyFileToDestiantion()
 		bool ok = QFile::copy(fileToCopy, absDestPath);
 	}
 	m_backupList.clear();
-	emit updateStatus(HashTool::md5(m_info), SyncStatus::Finished);
+
+	this->m_status = SyncStatus::Finished;
+	emit updateStatus(m_hash, m_status);
 }
 
 void TaskActuator::deleteFiles()
 {
-	emit updateStatus(HashTool::md5(m_info), SyncStatus::Syncing);
+	this->m_status = SyncStatus::Syncing;
+	emit updateStatus(m_hash, m_status);
 	for (auto&& fileToDelete : m_deleteList)
 	{		
 		//stop when needed
 		if (m_stop)
 			return;
-		QFile file(fileToDelete);
+		QFile file(fileToDelete.replace(m_info._source, m_info._dest));
 		if (file.exists())
 			file.remove();
 	}
 	m_deleteList.clear();
-	emit updateStatus(HashTool::md5(m_info), SyncStatus::Finished);
+
+	this->m_status = SyncStatus::Finished;
+	emit updateStatus(m_hash, m_status);
 }
 
 void TaskActuator::terminate(const QString& hash)
 {
-	if (hash != HashTool::md5(m_info))
+	if (hash != this->m_hash)
 		return;
 	m_stop = true;
 	QDir dir;
@@ -104,28 +125,22 @@ void TaskActuator::initWorkFolder()
 	const QString objectFileAbslotePath = dirAbslotePath + "/" + c_configFileName;
 	QFile objectFile(objectFileAbslotePath);
 	//make sure the objects file exists
-	if (!objectFile.exists())
+	if (!objectFile.exists()) 
+	{
 		objectFile.open(QIODevice::ReadWrite | QIODevice::Truncate);
-	QJsonObject root;
-
-	buildFileInfoJson(&root);
-
-	QJsonDocument doc(root);
-	if (!objectFile.isOpen())
-		objectFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
-	objectFile.write(doc.toJson());
-	objectFile.close();
+	}
 }
 
 void TaskActuator::checkRepoStatus()
 {
-	emit updateStatus(HashTool::md5(m_info), SyncStatus::Checking);
+	this->m_status = SyncStatus::Checking;
+	emit updateStatus(m_hash, m_status);
 	//check and write files path that are being copying to backupList
 	const QString objectFilePath = m_info._source + "/"
 		+ c_configFileFolder + "/"
 		+ c_configFileName;
 	QFile objectsFile(objectFilePath);
-	if (!objectsFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate))
+	if (!objectsFile.open(QIODevice::ReadWrite))
 	{
 		//TODO: add file open error handle
 	}
@@ -162,13 +177,13 @@ void TaskActuator::checkRepoStatus()
 				const QString& lastHash 
 					= lastInfo.value(c_keySha1Hash).toString();
 				const QString& localHash
-					= HashTool::sha1(path);
+					= HashTool::sha1HashOfFile(path);
 				//file content changed
 				if (lastHash != localHash)
 					m_backupList.append(path);
-				lastMap.remove(path);
-				localMap.remove(path);
 			}
+			lastMap.remove(path);
+			localMap.remove(path);
 		}
 		//if path deleted in local,add path to delete list
 		else
@@ -203,7 +218,7 @@ bool TaskActuator::isIgnored(const QString& key)
 
 void TaskActuator::readIgnoreFile()
 {
-	const QString&& ignoreFilePath = m_info._source + "/" 
+	const QString&& ignoreFilePath = m_info._source + "/"
 		+ c_configFileFolder + "/" + c_ignoreFileName;
 	QFile ignoreFile(ignoreFilePath);
 	if (!ignoreFile.open(QIODevice::ReadOnly))
@@ -256,7 +271,7 @@ void TaskActuator::buildFileInfoJson(QJsonObject* root)
 		else
 		{
 			object.insert(c_keyLastModifiedTime, info.lastModified().toString());
-			object.insert(c_keySha1Hash, HashTool::sha1(info.absoluteFilePath()));
+			object.insert(c_keySha1Hash, HashTool::sha1HashOfFile(info.absoluteFilePath()));
 			root->insert(info.absoluteFilePath(), QJsonValue(object));
 		}
 	}

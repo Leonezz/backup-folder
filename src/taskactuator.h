@@ -13,7 +13,10 @@ class TaskActuator : public QObject
 	Q_OBJECT
 public:
 	TaskActuator(const TaskInfo& info);
-	void exec();
+public slots:
+	void start();
+	//stop task when asked by controller
+	void terminate(const QString& hash);
 signals:
 	void statusChecked();
 	void updateStatus(const QString& taskHash, const SyncStatus status);
@@ -24,8 +27,6 @@ private slots:
 	void copyFileToDestiantion();
 	//delete files of local
 	void deleteFiles();
-	//stop task when asked by controller
-	void terminate(const QString& hash);
 private:
 	//init the except set
 	void initExcept();

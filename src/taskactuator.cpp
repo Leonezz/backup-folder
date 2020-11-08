@@ -5,15 +5,16 @@ TaskActuator::TaskActuator(const TaskInfo& info)
 	, m_timer(new QTimer)
 	, m_stop(false)
 {
+
+}
+
+void TaskActuator::start()
+{
 	this->initExcept();
 	this->initConnections();
 	//init work folder when program start
 	this->initWorkFolder();
 	this->checkRepoStatus();
-}
-
-void TaskActuator::exec()
-{
 	m_timer->start(this->m_info._duration * 60 * 1000);
 }
 
